@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Escalas do posto</title>
+    <link rel="stylesheet" th:href="@{/css/estilo.css}">
+</head>
+<body>
+<header class="barra">
+    <div class="conteudo barra-interna">
+        <a class="marca" th:href="@{/}"><span class="marca-sinal">●</span> Escalas do posto</a>
+        <nav><a th:href="@{/funcionarios}">Funcionários</a></nav>
+    </div>
+</header>
+<main class="conteudo">
+    <p class="sobretitulo">ORGANIZAÇÃO DA EQUIPE</p>
+    <h1>Escalas mensais</h1>
+    <p class="subtitulo">Monte os turnos manualmente, acompanhe os avisos e imprima a escala para a equipe.</p>
+    <div class="alerta sucesso" th:if="${mensagem}" th:text="${mensagem}"></div>
+    <section class="cartao">
+        <h2>Criar escala</h2>
+        <div th:object="${form}">
+            <div class="alerta erro" th:each="erro : ${#fields.globalErrors()}" th:text="${erro}"></div>
+        </div>
+        <form th:action="@{/escalas}" th:object="${form}" method="post" class="form-linha">
+            <label>Mês
+                <select th:field="*{mes}">
+                    <option th:each="nome, indice : ${meses}" th:value="${indice.index + 1}" th:text="${nome}"></option>
+                </select>
+                <small class="erro-texto" th:if="${#fields.hasErrors('mes')}" th:errors="*{mes}"></small>
+            </label>
+            <label>Ano
+                <input type="number" th:field="*{ano}" min="2000" max="2100" required>
+                <small class="erro-texto" th:if="${#fields.hasErrors('ano')}" th:errors="*{ano}"></small>
+            </label>
+            <button type="submit">Criar escala</button>
+        </form>
+        <p class="ajuda">A escala inclui os funcionários ativos no momento da criação.</p>
+    </section>
+    <section class="cartao">
+        <div class="titulo-linha"><h2>Escalas salvas</h2><a th:href="@{/funcionarios}">Gerenciar funcionários</a></div>
+        <p th:if="${#lists.isEmpty(escalas)}">Ainda não há escalas salvas.</p>
+        <ul class="lista" th:unless="${#lists.isEmpty(escalas)}">
+            <li th:each="escala : ${escalas}">
+                <a th:href="@{/escalas/{id}(id=${escala.id})}"
+                   th:text="|${meses[escala.mes - 1]} de ${escala.ano}|">Mês e ano</a>
+            </li>
+        </ul>
+    </section>
+</main>
+</body>
+</html>

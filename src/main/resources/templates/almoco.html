@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="|Almoço do dia ${visao.data} - Escalas do posto|">Horários de almoço</title>
+    <link rel="stylesheet" th:href="@{/css/estilo.css}">
+</head>
+<body>
+<header class="barra sem-impressao">
+    <div class="conteudo barra-interna">
+        <a class="marca" th:href="@{/}"><span class="marca-sinal">●</span> Escalas do posto</a>
+        <nav><a th:href="@{/funcionarios}">Funcionários</a></nav>
+    </div>
+</header>
+<main class="conteudo">
+    <a class="voltar sem-impressao" th:href="@{/escalas/{id}(id=${visao.escala.id})}">← Escala mensal</a>
+    <div class="cabecalho-pagina">
+        <div>
+            <p class="sobretitulo">HORÁRIOS DE ALMOÇO</p>
+            <h1 th:text="|${#numbers.formatInteger(visao.data.dayOfMonth, 2)} de ${mesNome} de ${visao.data.year}|"></h1>
+            <p class="subtitulo" th:text="${#strings.capitalize(diaSemana)}">Dia da semana</p>
+        </div>
+        <div class="acoes sem-impressao">
+            <button type="submit" form="form-almoco" th:if="${!#lists.isEmpty(visao.funcionarios)}">Salvar horários</button>
+            <button type="button" class="botao-secundario" onclick="window.print()">Imprimir / PDF</button>
+        </div>
+    </div>
+    <div class="alerta sucesso sem-impressao" th:if="${mensagem}" th:text="${mensagem}"></div>
+    <div class="alerta erro sem-impressao" th:if="${erro}" th:text="${erro}"></div>
+    <nav class="navegacao-dia sem-impressao" aria-label="Navegação pelos dias">
+        <a th:if="${diaAnterior}" th:href="@{/escalas/{id}/almoco(id=${visao.escala.id},data=${diaAnterior})}">← Dia anterior</a>
+        <span th:unless="${diaAnterior}"></span>
+        <a th:if="${diaSeguinte}" th:href="@{/escalas/{id}/almoco(id=${visao.escala.id},data=${diaSeguinte})}">Dia seguinte →</a>
+    </nav>
+    <p class="ajuda sem-impressao">Preencha o começo e o fim do almoço. No terceiro turno, um fim anterior ao início representa o dia seguinte.</p>
+    <div class="cartao" th:if="${#lists.isEmpty(visao.funcionarios)}">
+        <p>Ninguém está marcado para trabalhar neste dia. Preencha primeiro a <a th:href="@{/escalas/{id}(id=${visao.escala.id})}">escala mensal</a>.</p>
+    </div>
+    <form id="form-almoco" th:unless="${#lists.isEmpty(visao.funcionarios)}"
+          th:action="@{/escalas/{id}/almoco(id=${visao.escala.id})}" method="post">
+        <input type="hidden" name="data" th:value="${visao.data}">
+        <div class="tabela-rolagem tabela-painel">
+            <table class="tabela-almoco">
+                <thead><tr><th>Funcionário</th><th>Trabalho</th><th>Início do almoço</th><th>Fim do almoço</th></tr></thead>
+                <tbody>
+                <tr th:each="dia : ${visao.funcionarios}" th:classappend="${dia.local.name() == 'CAIXA' ? 'linha-caixa' : ''}">
+                    <th scope="row" th:text="${dia.funcionario.nome}">Funcionário</th>
+                    <td th:text="${dia.marcacao.resumo}">06:00</td>
+                    <td class="campo-hora">
+                        <input class="hora-almoco sem-impressao" type="time" th:name="|inicio_${dia.id}|" th:value="${dia.almocoInicio}" th:aria-label="|Início do almoço de ${dia.funcionario.nome}|">
+                        <span class="valor-impressao" th:text="${dia.almocoInicio != null ? dia.almocoInicio : '—'}">—</span>
+                    </td>
+                    <td class="campo-hora">
+                        <input class="hora-almoco sem-impressao" type="time" th:name="|fim_${dia.id}|" th:value="${dia.almocoFim}" th:aria-label="|Fim do almoço de ${dia.funcionario.nome}|">
+                        <span class="valor-impressao" th:text="${dia.almocoFim != null ? dia.almocoFim : '—'}">—</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="acoes rodape-acoes sem-impressao"><span>Campos vazios ficam sem horário de almoço.</span><button type="submit">Salvar horários</button></div>
+    </form>
+    <p class="rodape-impressao">Horários de almoço · Escala do posto · <span th:text="${visao.data}"></span></p>
+</main>
+<script th:src="@{/js/almoco.js}" defer></script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+:root { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: #173a2b; background: #f4f8f4; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+a { color: #08643b; }
+.barra { background: #006b3d; color: white; border-bottom: 4px solid #efc94c; }
+.barra a { color: white; text-decoration: none; }
+.barra-interna { display: flex; justify-content: space-between; align-items: center; padding-top: 1rem; padding-bottom: 1rem; }
+.marca { font-size: 1.1rem; font-weight: 750; }
+.marca-sinal { color: #f6d34e; font-size: 1.3rem; margin-right: .2rem; }
+.conteudo { width: min(100% - 2rem, 960px); margin: 0 auto; }
+.conteudo-largo { width: min(100% - 2rem, 1600px); }
+main { padding-top: 2rem; padding-bottom: 4rem; }
+h1 { margin: 0 0 .4rem; font-size: clamp(1.7rem, 3vw, 2.3rem); }
+h2 { margin: 0 0 1.2rem; font-size: 1.25rem; }
+.subtitulo, .ajuda { color: #607267; }
+.subtitulo { margin: 0 0 1.8rem; }
+.ajuda { margin-bottom: 0; font-size: .9rem; }
+.sobretitulo { margin: 0 0 .3rem; color: #087444; font-size: .72rem; font-weight: 800; letter-spacing: .12em; }
+.cartao, .tabela-painel { background: white; border: 1px solid #d9e6dc; border-radius: .7rem; box-shadow: 0 2px 12px #154c2610; }
+.cartao { padding: 1.5rem; margin-bottom: 1.5rem; }
+.form-linha { display: flex; gap: 1rem; align-items: end; flex-wrap: wrap; }
+label { display: flex; flex-direction: column; gap: .4rem; font-weight: 600; }
+.campo-nome { flex: 1; min-width: 220px; }
+input, select { min-height: 2.5rem; border: 1px solid #a9bead; border-radius: .35rem; padding: .45rem .65rem; font: inherit; background: white; color: inherit; }
+button { min-height: 2.5rem; border: 0; border-radius: .35rem; padding: .55rem 1rem; background: #087444; color: white; font: inherit; font-weight: 650; cursor: pointer; }
+button:hover { background: #005a32; }
+.botao-secundario { background: #e0eee4; color: #075b37; }
+.botao-secundario:hover { background: #cce3d2; }
+.botao-link { display: inline-flex; min-height: 2.5rem; align-items: center; border-radius: .35rem; padding: .55rem 1rem; font-weight: 650; text-decoration: none; }
+.alerta { padding: .8rem 1rem; border-radius: .4rem; margin-bottom: 1.25rem; }
+.sucesso { background: #e2f4e6; color: #14623a; }
+.erro { background: #fff0f0; color: #a02d2d; }
+.erro-texto { color: #a02d2d; font-weight: 400; }
+.titulo-linha { display: flex; justify-content: space-between; gap: 1rem; align-items: baseline; }
+.lista { padding-left: 1.25rem; margin-bottom: 0; }
+.lista li { padding: .35rem 0; }
+.voltar { display: inline-block; margin-bottom: 1.25rem; text-decoration: none; font-weight: 600; }
+.tabela-rolagem { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; }
+th, td { border-bottom: 1px solid #e2eae3; padding: .65rem; text-align: left; }
+.tabela-simples th:last-child, .tabela-simples td:last-child { text-align: right; }
+.cabecalho-pagina { display: flex; justify-content: space-between; align-items: start; gap: 1rem; flex-wrap: wrap; }
+.acoes { display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; }
+.legenda { display: flex; gap: .7rem 1.4rem; flex-wrap: wrap; align-items: center; background: #e7f2e9; border: 1px solid #cae2d0; border-radius: .5rem; padding: .8rem 1rem; margin-bottom: 1rem; font-size: .87rem; }
+.legenda span { display: inline-flex; align-items: center; gap: .4rem; }
+.amostra { display: inline-block; width: .9rem; height: .9rem; border-radius: .18rem; border: 1px solid #aec6b4; }
+.amostra.vazio { background: #fff; }
+.amostra.pista { background: #eef7ef; }
+.amostra.caixa { background: #ffe8a1; }
+.amostra.folga { background: #fff4ba; }
+.amostra.ferias { background: #dce9f7; }
+.avisos { border: 1px solid #e4ca79; background: #fff9e5; border-radius: .5rem; padding: .75rem 1rem; margin-bottom: 1rem; }
+.avisos summary { cursor: pointer; font-weight: 700; }
+.avisos ul { margin-bottom: 0; padding-left: 1.2rem; }
+.avisos li { margin: .3rem 0; }
+.regras { color: #52675a; font-size: .84rem; margin-bottom: 1rem; }
+.ferias-painel { border: 1px solid #d6e5d8; background: white; border-radius: .5rem; padding: .8rem 1rem; margin-bottom: 1rem; }
+.ferias-painel summary { cursor: pointer; font-weight: 700; }
+.ferias-painel form { margin-top: 1rem; }
+.ajuda-tabela { margin-bottom: .55rem; }
+.tabela-escala { width: max-content; min-width: 100%; font-size: .79rem; }
+.tabela-escala th, .tabela-escala td { border: 1px solid #d9e7dc; text-align: center; padding: .38rem .18rem; min-width: 3.7rem; }
+.tabela-escala .inicio-semana { border-left: 2px solid #90bda0; }
+.tabela-escala thead th { background: #dcefe0; font-weight: 750; }
+.tabela-escala thead tr:first-child th { background: #087444; color: white; }
+.tabela-escala thead .fim-semana { background: #b8d8bd; }
+.tabela-escala thead tr:first-child .fim-semana { background: #0b5b38; }
+.dia-link { color: inherit; text-decoration: none; display: block; }
+.dia-link:hover { text-decoration: underline; }
+.tabela-escala .col-funcionario { position: sticky; left: 0; z-index: 2; min-width: 10.5rem; max-width: 10.5rem; text-align: left; padding-left: .8rem; }
+.tabela-escala thead .col-funcionario { z-index: 3; }
+.tabela-escala tbody .col-funcionario { background: white; white-space: nowrap; }
+.tabela-escala tbody .funcao-caixa { background: #fdf0c7; border-left: 4px solid #e4b640; }
+.tabela-escala .col-funcionario small { display: block; color: #795e16; font-size: .68rem; }
+.tabela-escala tbody tr:nth-child(even) .col-funcionario:not(.funcao-caixa) { background: #f8fbf8; }
+.celula { padding: .18rem !important; }
+.celula.vazio { background: #fff; }
+.celula.pista { background: #e6f4e8; }
+.celula.caixa { background: #ffe9a5; }
+.celula.folga { background: #fff4bc; }
+.celula.ferias { background: #dce9f7; }
+.marcacao { width: 100%; min-width: 3.5rem; min-height: 2rem; border: 0; background: transparent; padding: .15rem; font-size: .72rem; font-weight: 650; cursor: pointer; }
+.marcacao:focus-visible { outline: 2px solid #006b3d; outline-offset: -2px; }
+.valor-impressao, .rodape-impressao { display: none; }
+.rodape-acoes { justify-content: space-between; margin-top: 1rem; color: #607267; font-size: .86rem; }
+.navegacao-dia { display: flex; justify-content: space-between; margin: .4rem 0 1rem; font-weight: 650; }
+.tabela-almoco th, .tabela-almoco td { padding: .8rem 1rem; }
+.tabela-almoco thead { background: #e1f0e4; }
+.tabela-almoco .linha-caixa { background: #fff2c9; }
+.tabela-almoco .campo-hora { min-width: 170px; }
+.tabela-almoco input[type=time] { width: 100%; max-width: 170px; }
+@page { size: A3 landscape; margin: 8mm; }
+@media print {
+    :root { background: white; color: black; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    body { margin: 0; }
+    .sem-impressao { display: none !important; }
+    main, .conteudo, .conteudo-largo { width: 100%; max-width: none; margin: 0; padding: 0; }
+    .cabecalho-pagina { margin-bottom: 3mm; }
+    h1 { font-size: 16pt; margin: 0; }
+    .sobretitulo { font-size: 7pt; margin: 0; }
+    .tabela-rolagem { overflow: visible; }
+    .tabela-painel { border: 0; box-shadow: none; border-radius: 0; }
+    .tabela-escala { width: 100%; min-width: 0; table-layout: fixed; font-size: 5.5pt; }
+    .tabela-escala th, .tabela-escala td { min-width: 0; padding: 1.4mm .3mm !important; white-space: nowrap; }
+    .tabela-escala .col-funcionario { position: static; width: 31mm; min-width: 31mm; max-width: 31mm; padding-left: 1mm !important; overflow: hidden; }
+    .tabela-escala .col-funcionario small { font-size: 4.7pt; }
+    .dia-link { color: white; }
+    .valor-impressao { display: inline; font-weight: 700; }
+    .tabela-almoco { font-size: 11pt; }
+    .rodape-impressao { display: block; font-size: 7pt; margin-top: 3mm; }
+}

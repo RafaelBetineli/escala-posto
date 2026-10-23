@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="|Escala de ${mesNome} de ${visao.escala.ano} - Escalas do posto|">Escala mensal</title>
+    <link rel="stylesheet" th:href="@{/css/estilo.css}">
+</head>
+<body>
+<header class="barra sem-impressao">
+    <div class="conteudo barra-interna">
+        <a class="marca" th:href="@{/}"><span class="marca-sinal">●</span> Escalas do posto</a>
+        <nav><a th:href="@{/funcionarios}">Funcionários</a></nav>
+    </div>
+</header>
+<main class="conteudo conteudo-largo">
+    <a class="voltar sem-impressao" th:href="@{/}">← Todas as escalas</a>
+    <div class="cabecalho-pagina">
+        <div>
+            <p class="sobretitulo">ESCALA MENSAL</p>
+            <h1 th:text="|${#strings.capitalize(mesNome)} de ${visao.escala.ano}|">Mês e ano</h1>
+            <p class="subtitulo sem-impressao">Preencha manualmente os dias e salve antes de imprimir.</p>
+        </div>
+        <div class="acoes sem-impressao">
+            <button type="submit" form="form-escala">Salvar escala</button>
+            <a class="botao-link botao-secundario" th:href="@{/escalas/{id}/almoco(id=${visao.escala.id},data=${primeiroDia})}">Horários de almoço</a>
+            <button type="button" class="botao-secundario" onclick="window.print()">Imprimir / PDF</button>
+        </div>
+    </div>
+    <div class="alerta sucesso sem-impressao" th:if="${mensagem}" th:text="${mensagem}"></div>
+    <div class="alerta erro sem-impressao" th:if="${erro}" th:text="${erro}"></div>
+    <div class="legenda sem-impressao">
+        <span><b class="amostra vazio"></b> — = sem marcação</span>
+        <span><b class="amostra folga"></b> F = folga</span>
+        <span><b class="amostra ferias"></b> FER = férias</span>
+        <span><b class="amostra pista"></b> P = pista</span>
+        <span><b class="amostra caixa"></b> CX = caixa</span>
+        <span>06 = 06h–14h · 14 = 14h–22h · 22 = 22h–06h</span>
+    </div>
+    <details class="avisos sem-impressao" th:if="${!#lists.isEmpty(visao.avisos)}">
+        <summary th:text="|${#lists.size(visao.avisos)} aviso(s) para conferir|">Avisos</summary>
+        <ul><li th:each="aviso : ${visao.avisos}" th:text="${aviso}"></li></ul>
+    </details>
+    <div class="regras sem-impressao">Lembretes: 5 pessoas por turno e 1 de folga; 1 pessoa no caixa. Edson folga terça; Pamela e Junior folgam quinta. Joyce cobre Gustavo, Yago cobre Franciele e Marcos Arruda cobre Marcos Paulo.</div>
+    <details class="ferias-painel sem-impressao">
+        <summary>Marcar férias em um intervalo</summary>
+        <form class="form-linha" th:action="@{/escalas/{id}/ferias(id=${visao.escala.id})}" method="post">
+            <label>Funcionário
+                <select name="funcionarioId" required>
+                    <option value="">Selecione</option>
+                    <option th:each="linha : ${visao.linhas}" th:value="${linha.funcionarioId}" th:text="${linha.nome}"></option>
+                </select>
+            </label>
+            <label>De <input type="date" name="inicio" th:attr="min=${primeiroDia},max=${ultimoDia}" required></label>
+            <label>Até <input type="date" name="fim" th:attr="min=${primeiroDia},max=${ultimoDia}" required></label>
+            <button type="submit">Aplicar férias</button>
+        </form>
+        <p class="ajuda">A marcação FER substitui o turno e limpa o almoço dos dias escolhidos.</p>
+    </details>
+    <p class="ajuda sem-impressao ajuda-tabela">Clique no número de um dia para preencher os horários de almoço.</p>
+    <form id="form-escala" th:action="@{/escalas/{id}/dias(id=${visao.escala.id})}" method="post">
+        <div class="tabela-rolagem tabela-painel">
+            <table class="tabela-escala">
+                <thead>
+                <tr>
+                    <th scope="col" class="col-funcionario">Funcionário</th>
+                    <th scope="col" th:each="dia : ${visao.dias}" th:classappend="${(dia.data.dayOfWeek.value >= 6 ? 'fim-semana ' : '') + (dia.data.dayOfWeek.value == 1 ? 'inicio-semana' : '')}">
+                        <a class="dia-link" th:href="@{/escalas/{id}/almoco(id=${visao.escala.id},data=${dia.data})}" th:text="${#numbers.formatInteger(dia.data.dayOfMonth, 2)}">01</a>
+                    </th>
+                </tr>
+                <tr>
+                    <th scope="row" class="col-funcionario">Dia da semana</th>
+                    <th th:each="dia : ${visao.dias}" th:classappend="${(dia.data.dayOfWeek.value >= 6 ? 'fim-semana ' : '') + (dia.data.dayOfWeek.value == 1 ? 'inicio-semana' : '')}" th:text="${dia.semana}">SEG.</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="linha : ${visao.linhas}">
+                    <th scope="row" class="col-funcionario" th:classappend="${linha.funcao.name() == 'CAIXA' ? 'funcao-caixa' : ''}">
+                        <span th:text="${linha.nome}">Funcionário</span>
+                        <small th:if="${linha.funcao.name() == 'CAIXA'}">Caixa</small>
+                    </th>
+                    <td th:each="celula : ${linha.dias}" class="celula" th:classappend="${celula.marcacao.classe + (celula.data.dayOfWeek.value == 1 ? ' inicio-semana' : '')}">
+                        <select class="marcacao sem-impressao" th:name="|dia_${celula.id}|" th:aria-label="|${linha.nome}, dia ${#numbers.formatInteger(celula.data.dayOfMonth, 2)} de ${mesNome}: marcação|">
+                            <option th:each="opcao : ${opcoes}" th:value="${opcao.name()}" th:text="${opcao.descricao}"
+                                    th:selected="${opcao == celula.marcacao}" th:attr="data-resumo=${opcao.resumo},data-classe=${opcao.classe}"></option>
+                        </select>
+                        <span class="valor-impressao" th:text="${celula.marcacao.resumo}">—</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="acoes rodape-acoes sem-impressao">
+            <span>As cores indicam a marcação escolhida. Avisos não alteram a escala.</span>
+            <button type="submit">Salvar escala</button>
+        </div>
+    </form>
+    <p class="rodape-impressao">Legenda: F = folga · FER = férias · CX = caixa · horários indicam início do turno · 06h–14h / 14h–22h / 22h–06h</p>
+</main>
+<script th:src="@{/js/escala.js}" defer></script>
+</body>
+</html>
