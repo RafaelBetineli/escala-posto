@@ -18,11 +18,14 @@ No Linux ou macOS:
 ./mvnw spring-boot:run
 ```
 
-O ZIP de entrega também traz `escala-posto.jar` já compilado. Com Java 21 instalado, é possível iniciar sem Maven nem compilador:
+Para gerar o arquivo executável a partir do código, execute:
 
-```bash
-java -jar escala-posto.jar
+```powershell
+.\mvnw.cmd package
+java -jar target/escala-0.0.1-SNAPSHOT.jar
 ```
+
+No Linux ou macOS, substitua `.\mvnw.cmd` por `./mvnw`. O arquivo compilado fica na pasta `target/` e não é incluído no Git. Para distribuí-lo pronto a outra pessoa, envie o `.jar` separadamente do código, por exemplo em um ZIP ou em uma versão publicada no GitHub.
 
 Acesse http://localhost:8080. O H2 salva os dados em `data/escala.mv.db` na pasta de execução. Ao atualizar o projeto, **mantenha a pasta `data`** para preservar as escalas já criadas. Faça uma cópia dessa pasta com o sistema fechado antes de mover a instalação para outro computador.
 

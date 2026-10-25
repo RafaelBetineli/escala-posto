@@ -1,4 +1,5 @@
 target/
+escala-posto.jar
 data/
 *.mv.db
 *.trace.db
