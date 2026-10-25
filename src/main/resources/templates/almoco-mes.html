@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="|Almoços de ${mesNome} de ${visaoMes.escala.ano} - Escalas do posto|">Planejamento de almoço</title>
+    <link rel="stylesheet" th:href="@{/css/estilo.css}">
+    <link rel="stylesheet" th:href="@{/css/visual.css}">
+</head>
+<body>
+<header class="barra">
+    <div class="conteudo barra-interna">
+        <a class="marca" th:href="@{/}"><span class="marca-sinal">E</span><span>Escalas do posto<small>Gestão da equipe</small></span></a>
+        <nav class="nav-principal" aria-label="Navegação principal"><a class="ativo" aria-current="page" th:href="@{/}">Escalas</a><a th:href="@{/funcionarios}">Funcionários</a></nav>
+    </div>
+</header>
+<main class="conteudo conteudo-equipe pagina-almoco-mes">
+    <a class="voltar" th:href="@{/escalas/{id}(id=${visaoMes.escala.id})}">← Escala mensal</a>
+    <div class="cabecalho-pagina cabecalho-almoco-mes">
+        <div>
+            <p class="sobretitulo">PLANEJAMENTO DE ALMOÇO</p>
+            <h1 th:text="|${#strings.capitalize(mesNome)} de ${visaoMes.escala.ano}|">Mês e ano</h1>
+            <p class="subtitulo">Defina horários para vários dias e acompanhe o preenchimento de cada data.</p>
+        </div>
+    </div>
+
+    <div class="painel-almoco-mes">
+        <aside class="cartao resumo-almoco-mes" aria-label="Resumo do mês">
+            <div><p class="sobretitulo">SITUAÇÃO DO MÊS</p><h2>Almoços planejados</h2></div>
+            <div class="numero-resumo"><strong th:text="${visaoMes.definidos}">0</strong><span th:text="|de ${visaoMes.escalados} marcações de trabalho|">de 0 marcações de trabalho</span></div>
+            <div class="progresso-resumo">
+                <div class="barra-progresso" role="progressbar" th:attr="aria-valuenow=${visaoMes.definidos},aria-valuemax=${visaoMes.escalados > 0 ? visaoMes.escalados : 1}" aria-valuemin="0" aria-label="Almoços planejados">
+                    <span th:style="|width: ${visaoMes.escalados > 0 ? visaoMes.definidos * 100 / visaoMes.escalados : 0}%|"></span>
+                </div>
+                <p class="pendencias-mes" th:if="${visaoMes.pendentes > 0}" th:text="|${visaoMes.pendentes} almoço(s) ainda sem horário|">Pendências</p>
+                <p class="pendencias-mes completo" th:if="${visaoMes.escalados > 0 and visaoMes.pendentes == 0}">Todos os almoços estão preenchidos.</p>
+                <p class="ajuda" th:if="${visaoMes.escalados == 0}">Marque os turnos na escala para começar.</p>
+            </div>
+        </aside>
+        <section class="cartao formulario-almoco-mes" aria-labelledby="titulo-aplicar-almoco">
+            <p class="sobretitulo">PREENCHIMENTO EM LOTE</p>
+            <h2 id="titulo-aplicar-almoco">Aplicar horário a um período</h2>
+            <p class="ajuda">Escolha uma pessoa e um intervalo. O horário será aplicado aos dias em que ela trabalha nesse período.</p>
+            <div class="alerta sucesso" th:if="${mensagem}" th:text="${mensagem}" role="status"></div>
+            <div class="alerta erro" th:if="${erro}" th:text="${erro}" role="alert"></div>
+            <div id="mensagem-lote" class="feedback-inline" hidden role="alert"></div>
+            <form id="form-almoco-lote" th:if="${!#lists.isEmpty(visaoMes.equipe)}"
+                  th:action="@{/escalas/{id}/almoco/lote(id=${visaoMes.escala.id})}" method="post" novalidate>
+                <label>Funcionário
+                    <select name="funcionarioId" required>
+                        <option value="">Selecione quem vai almoçar</option>
+                        <option th:each="funcionario : ${visaoMes.equipe}" th:value="${funcionario.id}" th:text="${funcionario.nome}"></option>
+                    </select>
+                </label>
+                <div class="campos-periodo-almoco">
+                    <label>Do dia <input type="date" name="inicio" th:attr="min=${primeiroDia},max=${ultimoDia}" th:value="${primeiroDia}" required></label>
+                    <label>Até o dia <input type="date" name="fim" th:attr="min=${primeiroDia},max=${ultimoDia}" th:value="${ultimoDia}" required></label>
+                </div>
+                <div class="campos-periodo-almoco">
+                    <label>Início do almoço <input type="time" name="horaInicio" required></label>
+                    <label>Fim do almoço <input type="time" name="horaFim" required></label>
+                </div>
+                <label class="opcao-substituir"><input type="checkbox" name="substituir" value="true"> Substituir horários já preenchidos</label>
+                <p class="ajuda">Folgas e férias são ignoradas. Sem a opção acima, horários existentes são mantidos. Se o horário não couber em algum turno, nada será alterado.</p>
+                <button type="submit">Aplicar ao período</button>
+            </form>
+            <div class="estado-sem-turnos" th:if="${#lists.isEmpty(visaoMes.equipe)}">
+                <strong>Ainda não há turnos de trabalho neste mês.</strong>
+                <p>Marque os dias na escala para começar a planejar os almoços.</p>
+                <a class="botao-link botao-secundario" th:href="@{/escalas/{id}(id=${visaoMes.escala.id})}">Abrir escala mensal</a>
+            </div>
+        </section>
+    </div>
+
+    <section class="dias-almoco" aria-labelledby="titulo-dias-almoco">
+        <div class="titulo-secao">
+            <div><p class="sobretitulo">REVISÃO DIÁRIA</p><h2 id="titulo-dias-almoco">Dias do mês</h2></div>
+            <label class="filtro-pendentes"><input id="somente-pendentes" type="checkbox"> Mostrar apenas dias pendentes</label>
+        </div>
+        <div class="grade-dias-almoco">
+            <a class="cartao-dia-almoco" th:each="dia : ${visaoMes.dias}"
+               th:classappend="${dia.escalados == 0 ? ' sem-turno' : (dia.pendentes > 0 ? ' com-pendencias' : ' completo')}"
+               th:href="@{/escalas/{id}/almoco(id=${visaoMes.escala.id},data=${dia.data})}"
+               th:attr="data-pendentes=${dia.pendentes}">
+                <span class="dia-almoco-cabecalho"><strong th:text="${#numbers.formatInteger(dia.data.dayOfMonth, 2)}">01</strong><small th:text="${#strings.toUpperCase(dia.semana)}">DOM.</small></span>
+                <span class="dia-almoco-progresso" th:if="${dia.escalados > 0}" th:text="|${dia.definidos} de ${dia.escalados} almoços|">0 de 0 almoços</span>
+                <span class="dia-almoco-progresso" th:if="${dia.escalados == 0}">Sem turnos marcados</span>
+                <span class="dia-almoco-estado" th:if="${dia.pendentes > 0}" th:text="|${dia.pendentes} pendente(s) →|">Pendentes</span>
+                <span class="dia-almoco-estado" th:if="${dia.escalados > 0 and dia.pendentes == 0}">Concluído →</span>
+                <span class="dia-almoco-estado" th:if="${dia.escalados == 0}">Ver dia →</span>
+            </a>
+        </div>
+        <p id="nenhum-dia-pendente" class="cartao aviso-vazio" hidden>Nenhum dia pendente neste mês.</p>
+    </section>
+</main>
+<script th:src="@{/js/almoco-mes.js}" defer></script>
+</body>
+</html>

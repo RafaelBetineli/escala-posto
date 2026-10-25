@@ -5,15 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title th:text="|Escala de ${mesNome} de ${visao.escala.ano} - Escalas do posto|">Escala mensal</title>
     <link rel="stylesheet" th:href="@{/css/estilo.css}">
+    <link rel="stylesheet" th:href="@{/css/visual.css}">
 </head>
 <body>
 <header class="barra sem-impressao">
     <div class="conteudo barra-interna">
-        <a class="marca" th:href="@{/}"><span class="marca-sinal">●</span> Escalas do posto</a>
-        <nav><a th:href="@{/funcionarios}">Funcionários</a></nav>
+        <a class="marca" th:href="@{/}"><span class="marca-sinal">E</span><span>Escalas do posto<small>Gestão da equipe</small></span></a>
+        <nav class="nav-principal" aria-label="Navegação principal"><a class="ativo" aria-current="page" th:href="@{/}">Escalas</a><a th:href="@{/funcionarios}">Funcionários</a></nav>
     </div>
 </header>
-<main class="conteudo conteudo-largo">
+<main class="conteudo conteudo-largo pagina-escala">
     <a class="voltar sem-impressao" th:href="@{/}">← Todas as escalas</a>
     <div class="cabecalho-pagina">
         <div>
@@ -23,12 +24,13 @@
         </div>
         <div class="acoes sem-impressao">
             <button type="submit" form="form-escala">Salvar escala</button>
-            <a class="botao-link botao-secundario" th:href="@{/escalas/{id}/almoco(id=${visao.escala.id},data=${primeiroDia})}">Horários de almoço</a>
-            <button type="button" class="botao-secundario" onclick="window.print()">Imprimir / PDF</button>
+            <a class="botao-link botao-secundario" th:href="@{/escalas/{id}/almoco(id=${visao.escala.id})}">Horários de almoço</a>
+            <button type="button" class="botao-secundario imprimir">Imprimir / PDF</button>
         </div>
     </div>
     <div class="alerta sucesso sem-impressao" th:if="${mensagem}" th:text="${mensagem}"></div>
     <div class="alerta erro sem-impressao" th:if="${erro}" th:text="${erro}"></div>
+    <p class="aviso-rascunho">RASCUNHO NÃO SALVO — confira os dados antes de distribuir esta impressão.</p>
     <div class="legenda sem-impressao">
         <span><b class="amostra vazio"></b> — = sem marcação</span>
         <span><b class="amostra folga"></b> F = folga</span>
@@ -41,7 +43,7 @@
         <summary th:text="|${#lists.size(visao.avisos)} aviso(s) para conferir|">Avisos</summary>
         <ul><li th:each="aviso : ${visao.avisos}" th:text="${aviso}"></li></ul>
     </details>
-    <div class="regras sem-impressao">Lembretes: 5 pessoas por turno e 1 de folga; 1 pessoa no caixa. Edson folga terça; Pamela e Junior folgam quinta. Joyce cobre Gustavo, Yago cobre Franciele e Marcos Arruda cobre Marcos Paulo.</div>
+    <div class="regras sem-impressao"><span>Meta por turno: <strong>5 pessoas e 1 caixa</strong>. M, T e N mostram a cobertura de cada período.</span><a class="botao-link botao-neutro" th:href="@{/funcionarios}">Ajustar regras da equipe →</a></div>
     <details class="ferias-painel sem-impressao">
         <summary>Marcar férias em um intervalo</summary>
         <form class="form-linha" th:action="@{/escalas/{id}/ferias(id=${visao.escala.id})}" method="post">
@@ -58,28 +60,57 @@
         <p class="ajuda">A marcação FER substitui o turno e limpa o almoço dos dias escolhidos.</p>
     </details>
     <p class="ajuda sem-impressao ajuda-tabela">Clique no número de um dia para preencher os horários de almoço.</p>
+    <section class="cartao ferramentas sem-impressao" aria-label="Ferramentas de preenchimento">
+        <div class="titulo-secao"><div><p class="sobretitulo">FERRAMENTAS</p><h2>Montar a escala</h2></div><span class="titulo-ajuda">As alterações ficam pendentes até salvar</span></div>
+        <div class="form-linha">
+            <label>Ver dias <select id="filtro-semana"><option value="todos">Mês inteiro</option></select></label>
+            <label>Ver pessoas do turno
+                <select id="filtro-turno"><option value="todos">Todas</option><option value="06">Manhã</option><option value="14">Tarde</option><option value="22">Noite</option></select>
+            </label>
+            <button type="button" id="copiar-semana" class="botao-secundario" aria-expanded="false" aria-controls="painel-copia">Copiar 7 dias anteriores</button>
+        </div>
+        <div id="painel-copia" class="painel-acao" hidden>
+            <div><strong>Repetir marcações para todos</strong><p>Escolha os dias de destino. As férias existentes são preservadas e não são copiadas.</p></div>
+            <label>Dias de destino <select id="copiar-destino"></select></label>
+            <button type="button" id="confirmar-copia">Aplicar cópia</button>
+            <button type="button" id="cancelar-copia" class="botao-neutro">Cancelar</button>
+        </div>
+        <div class="form-linha preenchimento-lote">
+            <label>Funcionário <select id="lote-funcionario"><option value="">Selecione</option><option th:each="linha : ${visao.linhas}" th:value="${linha.funcionarioId}" th:text="${linha.nome}"></option></select></label>
+            <label>Do dia <input id="lote-inicio" type="number" min="1" th:attr="max=${ultimoDia.dayOfMonth}" value="1"></label>
+            <label>Até o dia <input id="lote-fim" type="number" min="1" th:attr="max=${ultimoDia.dayOfMonth}" th:value="${ultimoDia.dayOfMonth}"></label>
+            <label>Marcação <select id="lote-marcacao"><option th:each="opcao : ${opcoes}" th:value="${opcao.name()}" th:text="${opcao.descricao}"></option></select></label>
+            <button type="button" id="aplicar-lote">Aplicar no intervalo</button>
+        </div>
+        <p class="ajuda">Essas ações alteram a tabela na tela. Clique em Salvar escala para gravar.</p>
+        <div id="mensagem-interacao" class="feedback-inline" hidden role="status" aria-live="polite"></div>
+        <p id="estado-edicao" class="estado-edicao" role="status" aria-live="polite"></p>
+    </section>
     <form id="form-escala" th:action="@{/escalas/{id}/dias(id=${visao.escala.id})}" method="post">
         <div class="tabela-rolagem tabela-painel">
             <table class="tabela-escala">
                 <thead>
                 <tr>
                     <th scope="col" class="col-funcionario">Funcionário</th>
-                    <th scope="col" th:each="dia : ${visao.dias}" th:classappend="${(dia.data.dayOfWeek.value >= 6 ? 'fim-semana ' : '') + (dia.data.dayOfWeek.value == 1 ? 'inicio-semana' : '')}">
+                    <th scope="col" th:each="dia : ${visao.dias}" th:attr="data-dia=${dia.data.dayOfMonth}"
+                        th:classappend="${(dia.data.dayOfWeek.value >= 6 ? 'fim-semana ' : '') + (dia.data.dayOfWeek.value == 1 ? 'inicio-semana' : '') + (visao.resumos.get(dia.data).avisos > 0 ? ' dia-com-aviso' : '')}">
                         <a class="dia-link" th:href="@{/escalas/{id}/almoco(id=${visao.escala.id},data=${dia.data})}" th:text="${#numbers.formatInteger(dia.data.dayOfMonth, 2)}">01</a>
+                        <small class="resumo-turnos" th:title="${visao.resumos.get(dia.data).detalhes}" th:text="${visao.resumos.get(dia.data).texto}">M0/5 C0</small>
+                        <small class="contagem-avisos" th:if="${visao.resumos.get(dia.data).avisos > 0}" th:text="|${visao.resumos.get(dia.data).avisos} aviso(s)|">Avisos</small>
                     </th>
                 </tr>
                 <tr>
                     <th scope="row" class="col-funcionario">Dia da semana</th>
-                    <th th:each="dia : ${visao.dias}" th:classappend="${(dia.data.dayOfWeek.value >= 6 ? 'fim-semana ' : '') + (dia.data.dayOfWeek.value == 1 ? 'inicio-semana' : '')}" th:text="${dia.semana}">SEG.</th>
+                    <th th:each="dia : ${visao.dias}" th:attr="data-dia=${dia.data.dayOfMonth}" th:classappend="${(dia.data.dayOfWeek.value >= 6 ? 'fim-semana ' : '') + (dia.data.dayOfWeek.value == 1 ? 'inicio-semana' : '')}" th:text="${dia.semana}">SEG.</th>
                 </tr>
                 </thead>
                 <tbody>
-                <tr th:each="linha : ${visao.linhas}">
+                <tr th:each="linha : ${visao.linhas}" th:attr="data-funcionario=${linha.funcionarioId}">
                     <th scope="row" class="col-funcionario" th:classappend="${linha.funcao.name() == 'CAIXA' ? 'funcao-caixa' : ''}">
                         <span th:text="${linha.nome}">Funcionário</span>
                         <small th:if="${linha.funcao.name() == 'CAIXA'}">Caixa</small>
                     </th>
-                    <td th:each="celula : ${linha.dias}" class="celula" th:classappend="${celula.marcacao.classe + (celula.data.dayOfWeek.value == 1 ? ' inicio-semana' : '')}">
+                    <td th:each="celula : ${linha.dias}" class="celula" th:attr="data-dia=${celula.data.dayOfMonth}" th:classappend="${celula.marcacao.classe + (celula.data.dayOfWeek.value == 1 ? ' inicio-semana' : '')}">
                         <select class="marcacao sem-impressao" th:name="|dia_${celula.id}|" th:aria-label="|${linha.nome}, dia ${#numbers.formatInteger(celula.data.dayOfMonth, 2)} de ${mesNome}: marcação|">
                             <option th:each="opcao : ${opcoes}" th:value="${opcao.name()}" th:text="${opcao.descricao}"
                                     th:selected="${opcao == celula.marcacao}" th:attr="data-resumo=${opcao.resumo},data-classe=${opcao.classe}"></option>

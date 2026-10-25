@@ -28,14 +28,16 @@ Acesse http://localhost:8080. O H2 salva os dados em `data/escala.mv.db` na past
 
 ## Fluxo disponível
 
-1. Os 17 funcionários informados são cadastrados ao iniciar, sem duplicar cadastros existentes. O status ativo/inativo anterior é preservado. Em `/funcionarios`, cadastre outros funcionários ou alterne o status.
+1. Em uma instalação nova, os 17 funcionários informados são cadastrados ao iniciar. Em `/funcionarios`, cadastre outros funcionários, altere nome, função, folga fixa e quem cobre um titular no caixa, ou alterne o status. Cadastros existentes não são restaurados automaticamente ao reiniciar.
 2. Na página inicial, escolha mês e ano e crie a escala. Apenas funcionários ativos entram nela.
-3. Na tabela mensal, marque cada célula e clique em **Salvar escala**. Os códigos são `—` (vazio), `F` (folga), `FER` (férias), `06/14/22 P` (pista) e `06/14/22 CX` (caixa). Os números são os horários de início dos turnos.
+3. Na tabela mensal, marque cada célula e clique em **Salvar escala**. Os códigos são `—` (vazio), `F` (folga), `FER` (férias), `06/14/22 P` (pista) e `06/14/22 CX` (caixa). Os números são os horários de início dos turnos. O filtro pode mostrar blocos de sete dias ou apenas pessoas já marcadas em um turno. Para preencher mais rápido, escolha uma pessoa e um intervalo, ou clique em **Copiar 7 dias anteriores**, escolha os dias de destino e aplique. O destino independe do filtro de visualização. A cópia preserva as férias e não as propaga.
 4. Para férias, abra **Marcar férias em um intervalo**, escolha funcionário e datas dentro do mês e aplique. Essa ação substitui o turno e limpa o almoço nesses dias. Férias que passam de um mês para outro devem ser lançadas nas duas escalas mensais.
-5. Para almoço, clique no número do dia na tabela ou em **Horários de almoço**. Informe início e fim para cada pessoa marcada para trabalhar, e salve. A tela diária também pode ser impressa.
-6. Consulte escalas anteriores pela página inicial. Para imprimir ou salvar como PDF, abra a escala salva e clique em **Imprimir / PDF**; no navegador, escolha a impressora ou a opção de PDF.
+5. Para planejar os almoços do mês, clique em **Horários de almoço**. A página mensal mostra o total preenchido e os dias pendentes. Em **Aplicar horário a um período**, escolha a pessoa, as datas e o horário para preencher de uma vez os dias em que ela trabalha. Folgas e férias ficam de fora; horários existentes são mantidos, a menos que você marque **Substituir horários já preenchidos**. Se o horário não couber em algum turno do período, nada é aplicado. Para revisar ou ajustar um dia específico, clique no seu cartão na página mensal ou no número do dia na escala. O terceiro turno permite que o almoço atravesse a meia-noite. A tela diária também pode ser impressa.
+6. Consulte escalas anteriores pela página inicial. Para imprimir ou salvar como PDF, abra a escala salva e clique em **Imprimir / PDF**; no navegador, escolha a impressora ou a opção de PDF. Se precisar remover um mês, clique em **Excluir** no histórico e confirme dentro da página. A exclusão apaga os turnos e horários de almoço daquele mês e não pode ser desfeita.
 
-Cada combinação de mês e ano pode ter uma escala. Alterar o status de um funcionário depois da criação não remove os dias de escalas anteriores.
+Cada combinação de mês e ano pode ter uma escala. Alterar o status de um funcionário depois da criação não remove os dias de escalas anteriores. As regras de folga e cobertura são consultadas do cadastro atual, inclusive ao revisar escalas antigas.
+
+As alterações na escala e no almoço só são gravadas ao clicar em **Salvar**. Avisos e confirmações de edição aparecem dentro das páginas. A página avisa quando existem mudanças pendentes e impede imprimir uma versão diferente da que está gravada. Os contadores por dia são atualizados durante a edição; os avisos detalhados são recalculados depois de salvar.
 
 Marcar trabalho usa um turno e um local. Os horários dos turnos são 06h–14h, 14h–22h e 22h–06h. A impressão usa orientação paisagem e tamanho A3; ajuste o tamanho do papel no navegador se a impressora usar outro formato.
 
@@ -48,4 +50,4 @@ As planilhas de referência mostram uma visão mensal por funcionário e dia, co
 - Caixa: Gustavo, Franciele e Marcos Paulo. Coberturas: Joyce para Gustavo, Yago para Franciele e Marcos Arruda para Marcos Paulo.
 - No período da manhã: Edson folga toda terça-feira; Pamela e Junior folgam toda quinta-feira.
 
-As regras aparecem como lembretes e alguns avisos: trabalho em dia de folga fixa, cobertura de caixa ausente quando o titular folga ou está de férias, mais de cinco pessoas ou mais de uma pessoa no caixa no mesmo turno. Avisos são orientativos e aparecem depois de salvar; nenhuma marcação é alterada automaticamente.
+As regras aparecem como lembretes e avisos: trabalho em dia de folga fixa, cobertura de caixa ausente quando o titular folga ou está de férias, falta ou excesso de pessoas e falta ou excesso de caixas por turno. Os avisos de falta começam após a primeira marcação do dia, para não encher uma escala nova de alertas. Avisos são orientativos e aparecem depois de salvar; nenhuma marcação é alterada automaticamente.

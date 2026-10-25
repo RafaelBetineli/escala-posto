@@ -13,12 +13,14 @@ import br.com.posto.escala.repository.EscalaRepository;
 import br.com.posto.escala.repository.FuncionarioRepository;
 import br.com.posto.escala.view.DiaCabecalho;
 import br.com.posto.escala.view.LinhaEscala;
+import br.com.posto.escala.view.ResumoDia;
+import br.com.posto.escala.view.ResumoAlmocoDia;
 import br.com.posto.escala.view.VisualizacaoAlmoco;
+import br.com.posto.escala.view.VisualizacaoAlmocoMes;
 import br.com.posto.escala.view.VisualizacaoEscala;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.YearMonth;
-import java.time.DayOfWeek;
 import java.time.format.DateTimeParseException;
 import java.time.format.TextStyle;
 import java.util.ArrayList;
@@ -70,6 +72,13 @@ public class EscalaService {
     }
 
     @Transactional
+    public void excluir(Long escalaId) {
+        Escala escala = obterEscala(escalaId);
+        dias.excluirPorEscala(escalaId);
+        escalas.delete(escala);
+    }
+
+    @Transactional
     public void salvar(Long escalaId, Map<String, String> campos) {
         if (!escalas.existsById(escalaId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Escala não encontrada");
@@ -107,6 +116,26 @@ public class EscalaService {
     }
 
     @Transactional(readOnly = true)
+    public VisualizacaoAlmocoMes visualizarAlmocoMes(Long escalaId) {
+        Escala escala = obterEscala(escalaId);
+        YearMonth periodo = YearMonth.of(escala.getAno(), escala.getMes());
+        List<DiaEscala> trabalhando = dias.buscarPorEscala(escalaId).stream()
+                .filter(dia -> dia.getStatus() == StatusDia.T).toList();
+        List<Funcionario> equipe = trabalhando.stream().map(DiaEscala::getFuncionario).distinct()
+                .sorted(Comparator.comparing(Funcionario::getNome, String.CASE_INSENSITIVE_ORDER)).toList();
+        List<ResumoAlmocoDia> resumos = periodo.atDay(1).datesUntil(periodo.plusMonths(1).atDay(1))
+                .map(data -> {
+                    List<DiaEscala> noDia = trabalhando.stream().filter(dia -> dia.getData().equals(data)).toList();
+                    int definidos = (int) noDia.stream()
+                            .filter(dia -> dia.getAlmocoInicio() != null && dia.getAlmocoFim() != null).count();
+                    String semana = data.getDayOfWeek().getDisplayName(TextStyle.SHORT, PORTUGUES);
+                    return new ResumoAlmocoDia(data, semana, noDia.size(), definidos);
+                }).toList();
+        int definidos = resumos.stream().mapToInt(ResumoAlmocoDia::definidos).sum();
+        return new VisualizacaoAlmocoMes(escala, equipe, resumos, trabalhando.size(), definidos);
+    }
+
+    @Transactional(readOnly = true)
     public VisualizacaoAlmoco visualizarAlmoco(Long escalaId, LocalDate data) {
         Escala escala = obterEscala(escalaId);
         validarData(escala, data);
@@ -116,6 +145,52 @@ public class EscalaService {
                         .thenComparing(dia -> dia.getFuncionario().getNome(), String.CASE_INSENSITIVE_ORDER))
                 .toList();
         return new VisualizacaoAlmoco(escala, data, trabalhando);
+    }
+
+    @Transactional
+    public int aplicarAlmocoEmLote(Long escalaId, Long funcionarioId, LocalDate inicio, LocalDate fim,
+                                   String horaInicio, String horaFim, boolean substituir) {
+        Escala escala = obterEscala(escalaId);
+        YearMonth mes = YearMonth.of(escala.getAno(), escala.getMes());
+        if (funcionarioId == null || inicio == null || fim == null || inicio.isAfter(fim)
+                || !YearMonth.from(inicio).equals(mes) || !YearMonth.from(fim).equals(mes)) {
+            throw new IllegalArgumentException("Escolha uma pessoa e um período válido dentro do mês da escala.");
+        }
+        LocalTime comeco;
+        LocalTime termino;
+        try {
+            comeco = LocalTime.parse(horaInicio);
+            termino = LocalTime.parse(horaFim);
+        } catch (DateTimeParseException | NullPointerException ex) {
+            throw new IllegalArgumentException("Informe início e fim válidos para o almoço.");
+        }
+
+        List<DiaEscala> periodo = dias.buscarPorEscala(escalaId).stream()
+                .filter(dia -> dia.getFuncionario().getId().equals(funcionarioId)
+                        && !dia.getData().isBefore(inicio) && !dia.getData().isAfter(fim))
+                .toList();
+        if (periodo.isEmpty()) {
+            throw new IllegalArgumentException("Funcionário não encontrado nesta escala.");
+        }
+        List<DiaEscala> trabalhando = periodo.stream().filter(dia -> dia.getStatus() == StatusDia.T).toList();
+        if (trabalhando.isEmpty()) {
+            throw new IllegalArgumentException("A pessoa não trabalha em nenhum dia desse período.");
+        }
+        List<DiaEscala> preencher = trabalhando.stream()
+                .filter(dia -> substituir || (dia.getAlmocoInicio() == null && dia.getAlmocoFim() == null))
+                .toList();
+        if (preencher.isEmpty()) {
+            throw new IllegalArgumentException("Não há dias trabalhados sem almoço nesse período. Marque a opção de substituir para alterar horários existentes.");
+        }
+        for (DiaEscala dia : preencher) {
+            try {
+                validarAlmocoNoTurno(dia, comeco, termino);
+            } catch (IllegalArgumentException ex) {
+                throw new IllegalArgumentException("Dia " + dia.getData().getDayOfMonth() + ": " + ex.getMessage());
+            }
+        }
+        preencher.forEach(dia -> dia.definirAlmoco(comeco, termino));
+        return preencher.size();
     }
 
     @Transactional
@@ -140,7 +215,7 @@ public class EscalaService {
                 try {
                     LocalTime horaInicio = LocalTime.parse(inicio);
                     LocalTime horaFim = LocalTime.parse(fim);
-                    if (horaInicio.equals(horaFim)) throw new IllegalArgumentException("O almoço precisa ter duração para " + dia.getFuncionario().getNome() + ".");
+                    validarAlmocoNoTurno(dia, horaInicio, horaFim);
                     horarios.put(dia, new LocalTime[] {horaInicio, horaFim});
                 } catch (DateTimeParseException ex) {
                     throw new IllegalArgumentException("Horário de almoço inválido para " + dia.getFuncionario().getNome() + ".");
@@ -148,6 +223,26 @@ public class EscalaService {
             }
         }
         horarios.forEach((dia, horas) -> dia.definirAlmoco(horas[0], horas[1]));
+    }
+
+    private static void validarAlmocoNoTurno(DiaEscala dia, LocalTime inicio, LocalTime fim) {
+        int inicioTurno = switch (dia.getTurno()) {
+            case MANHA -> 6 * 60;
+            case TARDE -> 14 * 60;
+            case NOITE -> 22 * 60;
+        };
+        int fimTurno = inicioTurno + 8 * 60;
+        int inicioAlmoco = minutosNoTurno(dia.getTurno(), inicio);
+        int fimAlmoco = minutosNoTurno(dia.getTurno(), fim);
+        if (inicioAlmoco < inicioTurno || fimAlmoco > fimTurno || fimAlmoco <= inicioAlmoco) {
+            throw new IllegalArgumentException("O almoço de " + dia.getFuncionario().getNome()
+                    + " deve começar e terminar dentro do turno de trabalho.");
+        }
+    }
+
+    private static int minutosNoTurno(Turno turno, LocalTime horario) {
+        int minutos = horario.getHour() * 60 + horario.getMinute();
+        return turno == Turno.NOITE && minutos < 6 * 60 + 1 ? minutos + 24 * 60 : minutos;
     }
 
     private Escala obterEscala(Long id) {
@@ -181,7 +276,31 @@ public class EscalaService {
                 .sorted(Comparator.comparing((LinhaEscala linha) -> linha.funcao() != Funcao.CAIXA)
                         .thenComparing(LinhaEscala::nome, String.CASE_INSENSITIVE_ORDER))
                 .toList();
-        return new VisualizacaoEscala(escala, cabecalho, linhas, avisos(linhas));
+        List<Aviso> avisos = avisos(linhas);
+        Map<LocalDate, ResumoDia> resumos = new LinkedHashMap<>();
+        for (DiaCabecalho dia : cabecalho) {
+            StringBuilder texto = new StringBuilder();
+            StringBuilder detalhes = new StringBuilder();
+            for (Turno turno : Turno.values()) {
+                long total = linhas.stream().flatMap(linha -> linha.dias().stream())
+                        .filter(celula -> celula.getData().equals(dia.data()) && celula.getStatus() == StatusDia.T
+                                && celula.getTurno() == turno).count();
+                long caixas = linhas.stream().flatMap(linha -> linha.dias().stream())
+                        .filter(celula -> celula.getData().equals(dia.data()) && celula.getStatus() == StatusDia.T
+                                && celula.getTurno() == turno && celula.getLocal() == LocalTrabalho.CAIXA).count();
+                if (!texto.isEmpty()) {
+                    texto.append("\n");
+                    detalhes.append(" · ");
+                }
+                texto.append(switch (turno) { case MANHA -> "M"; case TARDE -> "T"; case NOITE -> "N"; })
+                        .append(total).append("/5 C").append(caixas);
+                detalhes.append(nomeTurno(turno)).append(": ").append(total).append("/5, caixa ").append(caixas);
+            }
+            int quantidade = (int) avisos.stream().filter(aviso -> aviso.data().equals(dia.data())).count();
+            resumos.put(dia.data(), new ResumoDia(texto.toString(), detalhes.toString(), quantidade));
+        }
+        return new VisualizacaoEscala(escala, cabecalho, linhas,
+                avisos.stream().map(Aviso::texto).toList(), resumos);
     }
 
     private static class LinhaEmConstrucao {
@@ -197,47 +316,54 @@ public class EscalaService {
         }
     }
 
-    private List<String> avisos(List<LinhaEscala> linhas) {
-        List<String> avisos = new ArrayList<>();
-        Map<String, LinhaEscala> nomes = new LinkedHashMap<>();
-        for (LinhaEscala linha : linhas) nomes.put(chave(linha.nome()), linha);
+    private record Aviso(LocalDate data, String texto) {}
+
+    private List<Aviso> avisos(List<LinhaEscala> linhas) {
+        List<Aviso> avisos = new ArrayList<>();
 
         for (LinhaEscala linha : linhas) {
             for (DiaEscala dia : linha.dias()) {
-                boolean edson = chave(linha.nome()).equals("edson") && dia.getData().getDayOfWeek() == DayOfWeek.TUESDAY;
-                boolean quinta = (chave(linha.nome()).equals("pamela") || chave(linha.nome()).equals("junior"))
-                        && dia.getData().getDayOfWeek() == DayOfWeek.THURSDAY;
-                if ((edson || quinta) && dia.getStatus() == StatusDia.T) {
-                    avisos.add("Dia " + dia.getData().getDayOfMonth() + ": conferir folga fixa de " + linha.nome() + ".");
+                if (dia.getFuncionario().getFolgaFixa() == dia.getData().getDayOfWeek()
+                        && dia.getStatus() == StatusDia.T) {
+                    avisos.add(new Aviso(dia.getData(), "Dia " + dia.getData().getDayOfMonth()
+                            + ": conferir folga fixa de " + linha.nome() + "."));
                 }
             }
         }
 
-        Map<String, String> coberturas = Map.of("gustavo", "joyce", "franciele", "yago", "marcos paulo", "marcos arruda");
-        for (var cobertura : coberturas.entrySet()) {
-            LinhaEscala titular = nomes.get(cobertura.getKey());
-            LinhaEscala substituto = nomes.get(cobertura.getValue());
-            if (titular == null) continue;
+        for (LinhaEscala titular : linhas) {
             for (DiaEscala dia : titular.dias()) {
-                if (dia.getStatus() != StatusDia.F && dia.getStatus() != StatusDia.V) continue;
-                boolean coberto = substituto != null && substituto.dias().stream()
-                        .anyMatch(outro -> outro.getData().equals(dia.getData()) && outro.getLocal() == LocalTrabalho.CAIXA);
-                if (!coberto) {
-                    avisos.add("Dia " + dia.getData().getDayOfMonth() + ": conferir cobertura do caixa de "
-                            + titular.nome() + " por " + (substituto == null ? cobertura.getValue() : substituto.nome()) + ".");
+                if (dia.getFuncionario().getFuncao() != Funcao.CAIXA
+                        || (dia.getStatus() != StatusDia.F && dia.getStatus() != StatusDia.V)) continue;
+                List<DiaEscala> substitutos = linhas.stream().flatMap(linha -> linha.dias().stream())
+                        .filter(outro -> outro.getFuncionario().getTitularCoberto() != null
+                                && outro.getFuncionario().getTitularCoberto().getId().equals(dia.getFuncionario().getId())
+                                && outro.getData().equals(dia.getData())).toList();
+                if (substitutos.isEmpty()) {
+                    avisos.add(new Aviso(dia.getData(), "Dia " + dia.getData().getDayOfMonth()
+                            + ": falta definir quem cobre o caixa de " + titular.nome() + "."));
+                } else if (substitutos.stream().noneMatch(outro -> outro.getStatus() == StatusDia.T
+                        && outro.getLocal() == LocalTrabalho.CAIXA)) {
+                    avisos.add(new Aviso(dia.getData(), "Dia " + dia.getData().getDayOfMonth()
+                            + ": conferir cobertura do caixa de " + titular.nome() + " por "
+                            + substitutos.getFirst().getFuncionario().getNome() + "."));
                 }
             }
         }
 
         if (!linhas.isEmpty()) {
             for (DiaEscala referencia : linhas.getFirst().dias()) {
+                boolean iniciado = linhas.stream().flatMap(linha -> linha.dias().stream())
+                        .anyMatch(dia -> dia.getData().equals(referencia.getData()) && dia.getStatus() != null);
                 for (Turno turno : Turno.values()) {
                     List<DiaEscala> noTurno = linhas.stream().flatMap(linha -> linha.dias().stream())
                             .filter(dia -> dia.getData().equals(referencia.getData()) && dia.getStatus() == StatusDia.T && dia.getTurno() == turno)
                             .toList();
                     long caixas = noTurno.stream().filter(dia -> dia.getLocal() == LocalTrabalho.CAIXA).count();
-                    if (noTurno.size() > 5) avisos.add("Dia " + referencia.getData().getDayOfMonth() + ": mais de 5 pessoas no " + nomeTurno(turno) + ".");
-                    if (caixas > 1) avisos.add("Dia " + referencia.getData().getDayOfMonth() + ": mais de 1 pessoa no caixa no " + nomeTurno(turno) + ".");
+                    if (noTurno.size() > 5) avisos.add(new Aviso(referencia.getData(), "Dia " + referencia.getData().getDayOfMonth() + ": mais de 5 pessoas no " + nomeTurno(turno) + "."));
+                    if (caixas > 1) avisos.add(new Aviso(referencia.getData(), "Dia " + referencia.getData().getDayOfMonth() + ": mais de 1 pessoa no caixa no " + nomeTurno(turno) + "."));
+                    if (iniciado && noTurno.size() < 5) avisos.add(new Aviso(referencia.getData(), "Dia " + referencia.getData().getDayOfMonth() + ": faltam " + (5 - noTurno.size()) + " pessoa(s) no " + nomeTurno(turno) + "."));
+                    if (iniciado && caixas == 0) avisos.add(new Aviso(referencia.getData(), "Dia " + referencia.getData().getDayOfMonth() + ": falta uma pessoa no caixa no " + nomeTurno(turno) + "."));
                 }
             }
         }
@@ -252,8 +378,4 @@ public class EscalaService {
         };
     }
 
-    private static String chave(String valor) {
-        return java.text.Normalizer.normalize(valor, java.text.Normalizer.Form.NFD)
-                .replaceAll("\\p{M}+", "").toLowerCase(Locale.ROOT);
-    }
 }

@@ -5,21 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Escalas do posto</title>
     <link rel="stylesheet" th:href="@{/css/estilo.css}">
+    <link rel="stylesheet" th:href="@{/css/visual.css(v='20261025-1')}">
 </head>
 <body>
 <header class="barra">
     <div class="conteudo barra-interna">
-        <a class="marca" th:href="@{/}"><span class="marca-sinal">●</span> Escalas do posto</a>
-        <nav><a th:href="@{/funcionarios}">Funcionários</a></nav>
+        <a class="marca" th:href="@{/}"><span class="marca-sinal">E</span><span>Escalas do posto<small>Gestão da equipe</small></span></a>
+        <nav class="nav-principal" aria-label="Navegação principal"><a class="ativo" aria-current="page" th:href="@{/}">Escalas</a><a th:href="@{/funcionarios}">Funcionários</a></nav>
     </div>
 </header>
-<main class="conteudo">
-    <p class="sobretitulo">ORGANIZAÇÃO DA EQUIPE</p>
-    <h1>Escalas mensais</h1>
-    <p class="subtitulo">Monte os turnos manualmente, acompanhe os avisos e imprima a escala para a equipe.</p>
+<main class="conteudo pagina-inicio">
+    <section class="hero">
+        <div><p class="sobretitulo">ORGANIZAÇÃO DA EQUIPE</p><h1>Escalas mensais</h1>
+            <p class="subtitulo">Planeje os turnos, confira a cobertura e prepare a escala para a equipe.</p></div>
+        <div class="hero-resumo"><strong>Uma visão clara do mês</strong><span>Preencha, revise e imprima no mesmo lugar.</span></div>
+    </section>
     <div class="alerta sucesso" th:if="${mensagem}" th:text="${mensagem}"></div>
-    <section class="cartao">
-        <h2>Criar escala</h2>
+    <div class="inicio-grid">
+    <section class="cartao cartao-criar">
+        <div class="titulo-secao"><div><p class="sobretitulo">NOVO PLANEJAMENTO</p><h2>Criar escala</h2></div></div>
         <div th:object="${form}">
             <div class="alerta erro" th:each="erro : ${#fields.globalErrors()}" th:text="${erro}"></div>
         </div>
@@ -36,18 +40,41 @@
             </label>
             <button type="submit">Criar escala</button>
         </form>
-        <p class="ajuda">A escala inclui os funcionários ativos no momento da criação.</p>
+        <p class="ajuda">Funcionários ativos são incluídos ao criar o mês.</p>
     </section>
-    <section class="cartao">
-        <div class="titulo-linha"><h2>Escalas salvas</h2><a th:href="@{/funcionarios}">Gerenciar funcionários</a></div>
+    <section class="cartao cartao-escalas">
+        <div class="titulo-linha"><div><p class="sobretitulo">HISTÓRICO</p><h2>Escalas salvas</h2></div><a class="botao-link botao-secundario" th:href="@{/funcionarios}">Gerenciar equipe</a></div>
         <p th:if="${#lists.isEmpty(escalas)}">Ainda não há escalas salvas.</p>
-        <ul class="lista" th:unless="${#lists.isEmpty(escalas)}">
-            <li th:each="escala : ${escalas}">
-                <a th:href="@{/escalas/{id}(id=${escala.id})}"
-                   th:text="|${meses[escala.mes - 1]} de ${escala.ano}|">Mês e ano</a>
+        <ul class="lista-escalas" th:unless="${#lists.isEmpty(escalas)}">
+            <li class="item-escala-registro" th:each="escala : ${escalas}">
+                <div class="item-escala-linha">
+                    <a class="item-escala" th:href="@{/escalas/{id}(id=${escala.id})}">
+                        <span class="item-escala-icone" aria-hidden="true">▦</span>
+                        <span class="item-escala-texto"><strong th:text="|${#strings.capitalize(meses[escala.mes - 1])} de ${escala.ano}|">Mês e ano</strong><small>Escala mensal</small></span>
+                        <span class="item-escala-acao">Abrir escala <span aria-hidden="true">→</span></span>
+                    </a>
+                    <button type="button" class="botao-excluir-escala" th:attr="aria-controls=|confirmar-exclusao-${escala.id}|,aria-label=|Excluir escala de ${#strings.capitalize(meses[escala.mes - 1])} de ${escala.ano}|" aria-expanded="false">
+                        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m3 0-.8 12a2 2 0 0 1-2 1.9H8.8a2 2 0 0 1-2-1.9L6 7m4 4v6m4-6v6"/></svg>
+                        <span>Excluir</span>
+                    </button>
+                </div>
+                <div class="confirmacao-exclusao" th:id="|confirmar-exclusao-${escala.id}|" hidden>
+                    <div>
+                        <strong th:text="|Excluir ${#strings.capitalize(meses[escala.mes - 1])} de ${escala.ano}?|">Excluir esta escala?</strong>
+                        <p>Os turnos e horários de almoço deste mês serão apagados. Esta ação não pode ser desfeita.</p>
+                    </div>
+                    <div class="confirmacao-exclusao-acoes">
+                        <button type="button" class="botao-cancelar-exclusao botao-neutro">Cancelar</button>
+                        <form th:action="@{/escalas/{id}/excluir(id=${escala.id})}" method="post">
+                            <button type="submit" class="botao-perigo">Excluir escala</button>
+                        </form>
+                    </div>
+                </div>
             </li>
         </ul>
     </section>
+    </div>
 </main>
+<script th:src="@{/js/inicio.js(v='20261025-1')}" defer></script>
 </body>
 </html>

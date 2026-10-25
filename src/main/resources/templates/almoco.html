@@ -5,35 +5,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title th:text="|Almoço do dia ${visao.data} - Escalas do posto|">Horários de almoço</title>
     <link rel="stylesheet" th:href="@{/css/estilo.css}">
+    <link rel="stylesheet" th:href="@{/css/visual.css}">
 </head>
 <body>
 <header class="barra sem-impressao">
     <div class="conteudo barra-interna">
-        <a class="marca" th:href="@{/}"><span class="marca-sinal">●</span> Escalas do posto</a>
-        <nav><a th:href="@{/funcionarios}">Funcionários</a></nav>
+        <a class="marca" th:href="@{/}"><span class="marca-sinal">E</span><span>Escalas do posto<small>Gestão da equipe</small></span></a>
+        <nav class="nav-principal" aria-label="Navegação principal"><a class="ativo" aria-current="page" th:href="@{/}">Escalas</a><a th:href="@{/funcionarios}">Funcionários</a></nav>
     </div>
 </header>
-<main class="conteudo">
-    <a class="voltar sem-impressao" th:href="@{/escalas/{id}(id=${visao.escala.id})}">← Escala mensal</a>
+<main class="conteudo conteudo-equipe pagina-almoco">
+    <a class="voltar sem-impressao" th:href="@{/escalas/{id}/almoco(id=${visao.escala.id})}">← Planejamento do mês</a>
     <div class="cabecalho-pagina">
         <div>
-            <p class="sobretitulo">HORÁRIOS DE ALMOÇO</p>
+            <p class="sobretitulo">EDIÇÃO DO DIA</p>
             <h1 th:text="|${#numbers.formatInteger(visao.data.dayOfMonth, 2)} de ${mesNome} de ${visao.data.year}|"></h1>
             <p class="subtitulo" th:text="${#strings.capitalize(diaSemana)}">Dia da semana</p>
         </div>
         <div class="acoes sem-impressao">
             <button type="submit" form="form-almoco" th:if="${!#lists.isEmpty(visao.funcionarios)}">Salvar horários</button>
-            <button type="button" class="botao-secundario" onclick="window.print()">Imprimir / PDF</button>
+            <button type="button" class="botao-secundario imprimir">Imprimir / PDF</button>
         </div>
     </div>
     <div class="alerta sucesso sem-impressao" th:if="${mensagem}" th:text="${mensagem}"></div>
     <div class="alerta erro sem-impressao" th:if="${erro}" th:text="${erro}"></div>
+    <p class="aviso-rascunho">RASCUNHO NÃO SALVO — confira os dados antes de distribuir esta impressão.</p>
     <nav class="navegacao-dia sem-impressao" aria-label="Navegação pelos dias">
         <a th:if="${diaAnterior}" th:href="@{/escalas/{id}/almoco(id=${visao.escala.id},data=${diaAnterior})}">← Dia anterior</a>
         <span th:unless="${diaAnterior}"></span>
         <a th:if="${diaSeguinte}" th:href="@{/escalas/{id}/almoco(id=${visao.escala.id},data=${diaSeguinte})}">Dia seguinte →</a>
     </nav>
-    <p class="ajuda sem-impressao">Preencha o começo e o fim do almoço. No terceiro turno, um fim anterior ao início representa o dia seguinte.</p>
+    <p class="ajuda sem-impressao">Preencha o começo e o fim do almoço dentro do turno de trabalho. No terceiro turno, um fim anterior ao início representa o dia seguinte.</p>
+    <p id="estado-edicao" class="estado-edicao sem-impressao" role="status" aria-live="polite"></p>
+    <div id="mensagem-interacao" class="feedback-inline sem-impressao" hidden role="status" aria-live="polite"></div>
     <div class="cartao" th:if="${#lists.isEmpty(visao.funcionarios)}">
         <p>Ninguém está marcado para trabalhar neste dia. Preencha primeiro a <a th:href="@{/escalas/{id}(id=${visao.escala.id})}">escala mensal</a>.</p>
     </div>

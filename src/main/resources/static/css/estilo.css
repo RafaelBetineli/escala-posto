@@ -1,6 +1,7 @@
 :root { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: #173a2b; background: #f4f8f4; }
 * { box-sizing: border-box; }
 body { margin: 0; }
+[hidden] { display: none !important; }
 a { color: #08643b; }
 .barra { background: #006b3d; color: white; border-bottom: 4px solid #efc94c; }
 .barra a { color: white; text-decoration: none; }
@@ -54,6 +55,12 @@ th, td { border-bottom: 1px solid #e2eae3; padding: .65rem; text-align: left; }
 .avisos ul { margin-bottom: 0; padding-left: 1.2rem; }
 .avisos li { margin: .3rem 0; }
 .regras { color: #52675a; font-size: .84rem; margin-bottom: 1rem; }
+.ferramentas { padding: 1rem; }
+.ferramentas .form-linha + .form-linha { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e2eae3; }
+.ferramentas input[type=number] { width: 6rem; }
+.estado-edicao { color: #92520d; font-weight: 700; margin: .55rem 0 0; }
+.estado-edicao:empty { display: none; }
+.aviso-rascunho { display: none; }
 .ferias-painel { border: 1px solid #d6e5d8; background: white; border-radius: .5rem; padding: .8rem 1rem; margin-bottom: 1rem; }
 .ferias-painel summary { cursor: pointer; font-weight: 700; }
 .ferias-painel form { margin-top: 1rem; }
@@ -67,6 +74,9 @@ th, td { border-bottom: 1px solid #e2eae3; padding: .65rem; text-align: left; }
 .tabela-escala thead tr:first-child .fim-semana { background: #0b5b38; }
 .dia-link { color: inherit; text-decoration: none; display: block; }
 .dia-link:hover { text-decoration: underline; }
+.resumo-turnos { display: block; margin-top: .25rem; font-size: .62rem; font-weight: 600; white-space: pre-line; line-height: 1.3; }
+.contagem-avisos { display: block; color: #fff5c9; font-size: .6rem; }
+.tabela-escala thead tr:first-child .dia-com-aviso { background: #80510c; }
 .tabela-escala .col-funcionario { position: sticky; left: 0; z-index: 2; min-width: 10.5rem; max-width: 10.5rem; text-align: left; padding-left: .8rem; }
 .tabela-escala thead .col-funcionario { z-index: 3; }
 .tabela-escala tbody .col-funcionario { background: white; white-space: nowrap; }
@@ -89,8 +99,16 @@ th, td { border-bottom: 1px solid #e2eae3; padding: .65rem; text-align: left; }
 .tabela-almoco .linha-caixa { background: #fff2c9; }
 .tabela-almoco .campo-hora { min-width: 170px; }
 .tabela-almoco input[type=time] { width: 100%; max-width: 170px; }
+.tabela-simples td select { min-width: 8.5rem; }
+.tabela-simples td input[name=nome] { min-width: 10rem; width: 100%; }
+.tabela-simples td:last-child { white-space: nowrap; }
+.tabela-simples td:last-child form { display: inline; }
+.tabela-simples td:last-child button { margin: .15rem; }
 @page { size: A3 landscape; margin: 8mm; }
 @media print {
+    .alterado .aviso-rascunho { display: block; color: #9b1c1c; font-size: 9pt; font-weight: 800; }
+    .tabela-escala th[hidden], .tabela-escala td[hidden] { display: table-cell !important; }
+    .tabela-escala tr[hidden] { display: table-row !important; }
     :root { background: white; color: black; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
     body { margin: 0; }
     .sem-impressao { display: none !important; }
@@ -105,6 +123,7 @@ th, td { border-bottom: 1px solid #e2eae3; padding: .65rem; text-align: left; }
     .tabela-escala .col-funcionario { position: static; width: 31mm; min-width: 31mm; max-width: 31mm; padding-left: 1mm !important; overflow: hidden; }
     .tabela-escala .col-funcionario small { font-size: 4.7pt; }
     .dia-link { color: white; }
+    .resumo-turnos, .contagem-avisos { display: none; }
     .valor-impressao { display: inline; font-weight: 700; }
     .tabela-almoco { font-size: 11pt; }
     .rodape-impressao { display: block; font-size: 7pt; margin-top: 3mm; }

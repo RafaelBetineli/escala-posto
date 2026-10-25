@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import org.springframework.stereotype.Controller;
-import org.springframework.http.HttpStatus;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -24,7 +23,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import org.springframework.web.server.ResponseStatusException;
 
 @Controller
 public class EscalaController {
@@ -58,6 +56,13 @@ public class EscalaController {
         }
         preencherInicio(model);
         return "inicio";
+    }
+
+    @PostMapping("/escalas/{id}/excluir")
+    public String excluir(@PathVariable Long id, RedirectAttributes redirect) {
+        service.excluir(id);
+        redirect.addFlashAttribute("mensagem", "Escala excluída com seus turnos e horários de almoço.");
+        return "redirect:/";
     }
 
     @GetMapping("/escalas/{id}")
@@ -102,9 +107,12 @@ public class EscalaController {
                          @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate data,
                          Model model) {
         if (data == null) {
-            var escala = escalas.findById(id)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Escala não encontrada"));
-            data = LocalDate.of(escala.getAno(), escala.getMes(), 1);
+            var visaoMes = service.visualizarAlmocoMes(id);
+            model.addAttribute("visaoMes", visaoMes);
+            model.addAttribute("mesNome", Month.of(visaoMes.escala().getMes()).getDisplayName(TextStyle.FULL, PORTUGUES));
+            model.addAttribute("primeiroDia", LocalDate.of(visaoMes.escala().getAno(), visaoMes.escala().getMes(), 1));
+            model.addAttribute("ultimoDia", YearMonth.of(visaoMes.escala().getAno(), visaoMes.escala().getMes()).atEndOfMonth());
+            return "almoco-mes";
         }
         var visao = service.visualizarAlmoco(id, data);
         model.addAttribute("visao", visao);
@@ -113,6 +121,25 @@ public class EscalaController {
         model.addAttribute("diaAnterior", data.getDayOfMonth() > 1 ? data.minusDays(1) : null);
         model.addAttribute("diaSeguinte", data.getDayOfMonth() < data.lengthOfMonth() ? data.plusDays(1) : null);
         return "almoco";
+    }
+
+    @PostMapping("/escalas/{id}/almoco/lote")
+    public String aplicarAlmocoEmLote(@PathVariable Long id,
+                                      @RequestParam(required = false) Long funcionarioId,
+                                      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
+                                      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fim,
+                                      @RequestParam(required = false) String horaInicio,
+                                      @RequestParam(required = false) String horaFim,
+                                      @RequestParam(defaultValue = "false") boolean substituir,
+                                      RedirectAttributes redirect) {
+        try {
+            int quantidade = service.aplicarAlmocoEmLote(id, funcionarioId, inicio, fim, horaInicio, horaFim, substituir);
+            redirect.addFlashAttribute("mensagem", "Almoço aplicado em " + quantidade + " dia(s) trabalhado(s)."
+                    + (substituir ? "" : " Horários já preenchidos foram mantidos."));
+        } catch (IllegalArgumentException ex) {
+            redirect.addFlashAttribute("erro", ex.getMessage());
+        }
+        return "redirect:/escalas/" + id + "/almoco";
     }
 
     @PostMapping("/escalas/{id}/almoco")

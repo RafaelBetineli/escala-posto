@@ -4,6 +4,8 @@ import br.com.posto.escala.domain.Funcao;
 import br.com.posto.escala.domain.Funcionario;
 import br.com.posto.escala.repository.FuncionarioRepository;
 import java.text.Normalizer;
+import java.time.DayOfWeek;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import org.springframework.boot.ApplicationArguments;
@@ -43,19 +45,35 @@ public class FuncionariosIniciais implements ApplicationRunner {
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
-        List<Funcionario> existentes = repositorio.findAll();
-        for (Cadastro cadastro : CADASTROS) {
-            String chave = chave(cadastro.nome());
-            Funcionario funcionario = existentes.stream()
-                    .filter(item -> chave(item.getNome()).equals(chave))
-                    .findFirst().orElse(null);
-            if (funcionario == null) {
-                funcionario = repositorio.save(new Funcionario(cadastro.nome(), true, cadastro.funcao()));
-                existentes.add(funcionario);
-            } else {
-                funcionario.setNome(cadastro.nome());
-                funcionario.setFuncao(cadastro.funcao());
+        List<Funcionario> existentes = new ArrayList<>(repositorio.findAll());
+        if (existentes.isEmpty()) {
+            for (Cadastro cadastro : CADASTROS) {
+                existentes.add(repositorio.save(new Funcionario(cadastro.nome(), true, cadastro.funcao())));
             }
+            aplicarRegrasIniciais(existentes, false);
+        } else {
+            // Apply the original examples once to databases created by earlier versions.
+            aplicarRegrasIniciais(existentes, true);
+        }
+    }
+
+    private void aplicarRegrasIniciais(List<Funcionario> existentes, boolean apenasLegados) {
+        for (Funcionario funcionario : existentes) {
+            if (apenasLegados && funcionario.getRegrasInicializadas() != null) continue;
+            String nome = chave(funcionario.getNome());
+            if (nome.equals("edson")) funcionario.setFolgaFixa(DayOfWeek.TUESDAY);
+            if (nome.equals("pamela") || nome.equals("junior")) funcionario.setFolgaFixa(DayOfWeek.THURSDAY);
+            String titular = switch (nome) {
+                case "joyce" -> "gustavo";
+                case "yago" -> "franciele";
+                case "marcos arruda" -> "marcos paulo";
+                default -> null;
+            };
+            if (titular != null) {
+                existentes.stream().filter(item -> chave(item.getNome()).equals(titular))
+                        .findFirst().ifPresent(funcionario::setTitularCoberto);
+            }
+            funcionario.setRegrasInicializadas(true);
         }
     }
 

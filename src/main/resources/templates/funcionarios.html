@@ -5,20 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Funcionários | Escalas do posto</title>
     <link rel="stylesheet" th:href="@{/css/estilo.css}">
+    <link rel="stylesheet" th:href="@{/css/visual.css}">
 </head>
 <body>
 <header class="barra">
     <div class="conteudo barra-interna">
-        <a class="marca" th:href="@{/}"><span class="marca-sinal">●</span> Escalas do posto</a>
-        <nav><a th:href="@{/}">Escalas</a></nav>
+        <a class="marca" th:href="@{/}"><span class="marca-sinal">E</span><span>Escalas do posto<small>Gestão da equipe</small></span></a>
+        <nav class="nav-principal" aria-label="Navegação principal"><a th:href="@{/}">Escalas</a><a class="ativo" aria-current="page" th:href="@{/funcionarios}">Funcionários</a></nav>
     </div>
 </header>
-<main class="conteudo">
-    <h1>Funcionários</h1>
-    <p class="subtitulo">Defina quem poderá entrar nas próximas escalas.</p>
+<main class="conteudo conteudo-equipe">
+    <div class="cabecalho-pagina"><div><p class="sobretitulo">EQUIPE</p><h1>Funcionários</h1>
+    <p class="subtitulo">Cadastre pessoas e ajuste as regras usadas na conferência das escalas.</p></div></div>
     <div class="alerta sucesso" th:if="${mensagem}" th:text="${mensagem}"></div>
-    <section class="cartao">
-        <h2>Novo funcionário</h2>
+    <div class="alerta erro" th:if="${erro}" th:text="${erro}"></div>
+    <section class="cartao cartao-cadastro">
+        <div class="titulo-secao"><div><p class="sobretitulo">CADASTRO</p><h2>Novo funcionário</h2></div><span class="titulo-ajuda">Entra nas próximas escalas se estiver ativo</span></div>
         <form th:action="@{/funcionarios}" th:object="${form}" method="post" class="form-linha">
             <label class="campo-nome">Nome
                 <input type="text" th:field="*{nome}" maxlength="120" required autofocus>
@@ -38,26 +40,43 @@
             <button type="submit">Cadastrar</button>
         </form>
     </section>
-    <section class="cartao">
-        <h2>Cadastrados</h2>
+    <section class="cartao cartao-equipe">
+        <div class="titulo-secao"><div><p class="sobretitulo">CONFIGURAÇÃO</p><h2>Equipe cadastrada</h2></div><span class="titulo-ajuda">Edite uma linha e salve para aplicar</span></div>
         <p th:if="${#lists.isEmpty(funcionarios)}">Nenhum funcionário cadastrado.</p>
         <div class="tabela-rolagem" th:unless="${#lists.isEmpty(funcionarios)}">
             <table class="tabela-simples">
-                <thead><tr><th>Nome</th><th>Função</th><th>Status</th><th>Ação</th></tr></thead>
+                <thead><tr><th>Nome</th><th>Função</th><th>Folga fixa</th><th>Cobre no caixa</th><th>Status</th><th>Ações</th></tr></thead>
                 <tbody>
                 <tr th:each="funcionario : ${funcionarios}">
-                    <td th:text="${funcionario.nome}">Nome</td>
-                    <td th:text="${funcionario.funcao.descricao}">Função</td>
-                    <td th:text="${funcionario.ativo ? 'Ativo' : 'Inativo'}">Status</td>
                     <td>
+                        <form th:id="|editar-${funcionario.id}|" th:action="@{/funcionarios/{id}/editar(id=${funcionario.id})}" method="post"></form>
+                        <input type="text" name="nome" th:form="|editar-${funcionario.id}|" th:value="${funcionario.nome}" maxlength="120" required th:aria-label="|Nome de ${funcionario.nome}|">
+                    </td>
+                    <td><select name="funcao" th:form="|editar-${funcionario.id}|" th:aria-label="|Função de ${funcionario.nome}|">
+                        <option th:each="funcao : ${funcoes}" th:value="${funcao}" th:text="${funcao.descricao}" th:selected="${funcao == funcionario.funcao}"></option>
+                    </select></td>
+                    <td><select name="folgaFixa" th:form="|editar-${funcionario.id}|" th:aria-label="|Folga fixa de ${funcionario.nome}|">
+                        <option value="">Sem folga fixa</option>
+                        <option th:each="dia : ${diasSemana}" th:value="${dia.key}" th:text="${dia.value}" th:selected="${dia.key == funcionario.folgaFixa}"></option>
+                    </select></td>
+                    <td><select name="titularCobertoId" th:form="|editar-${funcionario.id}|" th:aria-label="|Titular coberto por ${funcionario.nome}|">
+                        <option value="">Não cobre</option>
+                        <option th:each="titular : ${funcionarios}" th:if="${titular.funcao.name() == 'CAIXA' and titular.id != funcionario.id}"
+                                th:value="${titular.id}" th:text="${titular.nome}"
+                                th:selected="${funcionario.titularCoberto != null and funcionario.titularCoberto.id == titular.id}"></option>
+                    </select></td>
+                    <td><span class="status-etiqueta" th:classappend="${funcionario.ativo ? ' status-ativo' : ' status-inativo'}" th:text="${funcionario.ativo ? 'Ativo' : 'Inativo'}">Status</span></td>
+                    <td>
+                        <button type="submit" th:form="|editar-${funcionario.id}|">Salvar</button>
                         <form th:action="@{/funcionarios/{id}/alternar-status(id=${funcionario.id})}" method="post">
-                            <button class="botao-secundario" type="submit" th:text="${funcionario.ativo ? 'Inativar' : 'Ativar'}">Alterar</button>
+                            <button class="botao-neutro" type="submit" th:text="${funcionario.ativo ? 'Inativar' : 'Ativar'}">Alterar</button>
                         </form>
                     </td>
                 </tr>
                 </tbody>
             </table>
         </div>
+        <p class="ajuda">A folga fixa e a cobertura geram avisos na escala. Alterações nas regras valem também para a conferência das escalas já criadas.</p>
     </section>
 </main>
 </body>
