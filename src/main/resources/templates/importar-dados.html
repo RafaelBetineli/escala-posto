@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Revisar importação · Escalas do posto</title>
+    <link rel="stylesheet" th:href="@{/css/estilo.css}">
+    <link rel="stylesheet" th:href="@{/css/visual.css(v='20261025-2')}">
+</head>
+<body>
+<header class="barra">
+    <div class="conteudo barra-interna">
+        <a class="marca" th:href="@{/}"><span class="marca-sinal">E</span><span>Escalas do posto<small>Gestão da equipe</small></span></a>
+        <nav class="nav-principal" aria-label="Navegação principal"><a th:href="@{/}">Escalas</a><a th:href="@{/funcionarios}">Funcionários</a></nav>
+    </div>
+</header>
+<main class="conteudo pagina-revisao-dados">
+    <a class="voltar" th:href="@{/}">← Voltar às escalas</a>
+    <p class="sobretitulo">IMPORTAÇÃO DE DADOS</p>
+    <h1>Confira antes de substituir</h1>
+    <p class="subtitulo">O arquivo foi lido e validado. Revise o resumo para decidir se deseja usar estes dados neste computador.</p>
+    <div class="alerta erro" th:if="${erro}" th:text="${erro}" role="alert"></div>
+    <section class="cartao revisao-dados">
+        <div class="titulo-secao"><div><p class="sobretitulo">CONTEÚDO DO ARQUIVO</p><h2>O que será importado</h2></div></div>
+        <div class="resumo-transferencia">
+            <div><strong th:text="${#lists.size(pendente.dados.funcionarios)}">17</strong><span>funcionários</span></div>
+            <div><strong th:text="${#lists.size(pendente.dados.escalas)}">2</strong><span>escalas mensais</span></div>
+            <div><strong th:text="${#lists.size(pendente.dados.dias)}">1054</strong><span>dias registrados</span></div>
+        </div>
+        <div class="aviso-substituicao">
+            <strong>Esta importação substitui todos os dados deste computador.</strong>
+            <p>Funcionários, regras, escalas e almoços atuais serão removidos. Se quiser guardá-los, <a th:href="@{/dados/exportar}">baixe uma cópia antes de continuar</a>.</p>
+        </div>
+        <div class="acoes-revisao">
+            <form th:action="@{/dados/importar/cancelar}" method="post"><button class="botao-neutro" type="submit">Cancelar</button></form>
+            <form th:action="@{/dados/importar}" method="post">
+                <input type="hidden" name="token" th:value="${pendente.token}">
+                <button class="botao-perigo" type="submit">Substituir dados deste computador</button>
+            </form>
+        </div>
+    </section>
+</main>
+</body>
+</html>

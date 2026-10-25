@@ -27,7 +27,13 @@ java -jar target/escala-0.0.1-SNAPSHOT.jar
 
 No Linux ou macOS, substitua `.\mvnw.cmd` por `./mvnw`. O arquivo compilado fica na pasta `target/` e não é incluído no Git. Para distribuí-lo pronto a outra pessoa, envie o `.jar` separadamente do código, por exemplo em um ZIP ou em uma versão publicada no GitHub.
 
-Acesse http://localhost:8080. O H2 salva os dados em `data/escala.mv.db` na pasta de execução. Ao atualizar o projeto, **mantenha a pasta `data`** para preservar as escalas já criadas. Faça uma cópia dessa pasta com o sistema fechado antes de mover a instalação para outro computador.
+### Programa Windows para cada computador
+
+Com um JDK 21 instalado **apenas no computador usado para gerar o pacote**, execute `powershell -File scripts/gerar-windows.ps1`. O script cria um ZIP em `target/pacotes-windows/`. Copie esse ZIP para cada computador, descompacte a pasta inteira e abra `EscalasDoPosto.exe`. Os computadores que usam o programa não precisam instalar Java.
+
+O programa inicia o sistema somente neste computador e abre a interface no navegador local. O ícone na área de notificação permite abrir a interface de novo ou sair. Os dados ficam em `%LOCALAPPDATA%\EscalasDoPosto\data`, fora da pasta do programa, para não serem perdidos ao atualizar o ZIP. Cada computador tem dados independentes; use **Baixar dados** e **Revisar importação** na página inicial para transferir uma cópia completa. A importação substitui todos os dados do computador de destino após uma revisão e confirmação; não há sincronização automática entre computadores. Exporte uma cópia do destino antes de importar se quiser guardar seus dados atuais.
+
+Ao executar pelo Maven ou pelo JAR, acesse http://localhost:8080. Nesse modo, o H2 salva os dados em `data/escala.mv.db` na pasta de execução. Ao atualizar o projeto, **mantenha a pasta `data`** para preservar as escalas já criadas. O executável Windows usa a pasta local indicada acima. Para levar os dados da versão antiga ao executável, exporte pelo sistema antigo e importe o arquivo no novo programa.
 
 ## Fluxo disponível
 

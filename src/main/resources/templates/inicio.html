@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Escalas do posto</title>
     <link rel="stylesheet" th:href="@{/css/estilo.css}">
-    <link rel="stylesheet" th:href="@{/css/visual.css(v='20261025-1')}">
+    <link rel="stylesheet" th:href="@{/css/visual.css(v='20261025-2')}">
 </head>
 <body>
 <header class="barra">
@@ -21,6 +21,7 @@
         <div class="hero-resumo"><strong>Uma visão clara do mês</strong><span>Preencha, revise e imprima no mesmo lugar.</span></div>
     </section>
     <div class="alerta sucesso" th:if="${mensagem}" th:text="${mensagem}"></div>
+    <div class="alerta erro" th:if="${erro}" th:text="${erro}" role="alert"></div>
     <div class="inicio-grid">
     <section class="cartao cartao-criar">
         <div class="titulo-secao"><div><p class="sobretitulo">NOVO PLANEJAMENTO</p><h2>Criar escala</h2></div></div>
@@ -74,6 +75,28 @@
         </ul>
     </section>
     </div>
+    <section class="cartao cartao-transferencia">
+        <div class="titulo-linha"><div><p class="sobretitulo">DADOS LOCAIS</p><h2>Levar escalas para outro computador</h2></div>
+            <p class="ajuda">Cada computador guarda sua própria cópia.</p></div>
+        <div class="transferencia-grid">
+            <div class="transferencia-opcao">
+                <span class="transferencia-passo">01 · Exportar</span>
+                <h3>Salvar uma cópia</h3>
+                <p>Baixe um arquivo com funcionários, regras, escalas e horários de almoço deste computador.</p>
+                <a class="botao-link botao-secundario" th:href="@{/dados/exportar}">Baixar dados</a>
+            </div>
+            <div class="transferencia-opcao">
+                <span class="transferencia-passo">02 · Importar</span>
+                <h3>Trazer os dados para este computador</h3>
+                <p>Escolha o arquivo exportado. Você poderá conferir o conteúdo antes de substituir os dados daqui.</p>
+                <form th:action="@{/dados/importar/revisar}" method="post" enctype="multipart/form-data" class="form-transferencia">
+                    <label for="arquivo-dados">Arquivo de dados (.json)</label>
+                    <input id="arquivo-dados" type="file" name="arquivo" accept=".json,application/json" required>
+                    <button type="submit">Revisar importação</button>
+                </form>
+            </div>
+        </div>
+    </section>
 </main>
 <script th:src="@{/js/inicio.js(v='20261025-1')}" defer></script>
 </body>

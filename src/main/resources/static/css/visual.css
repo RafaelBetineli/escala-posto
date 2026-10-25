@@ -96,6 +96,32 @@ button:hover { background: var(--verde-escuro); }
 .confirmacao-exclusao-acoes button { min-height: 2.35rem; font-size: .82rem; }
 .confirmacao-exclusao-acoes .botao-perigo { background: #a3372d; }
 .confirmacao-exclusao-acoes .botao-perigo:hover { background: #81261e; }
+.cartao-transferencia { margin-top: 1.4rem; }
+.cartao-transferencia .titulo-linha { align-items: end; }
+.cartao-transferencia .titulo-linha .ajuda { margin: 0; font-size: .85rem; }
+.transferencia-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.transferencia-opcao { display: flex; flex-direction: column; align-items: flex-start; padding: 1.25rem 1.35rem; border: 1px solid var(--borda); border-radius: .75rem; background: #f9fbf9; }
+.transferencia-passo { color: var(--verde); font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.transferencia-opcao h3 { margin: .5rem 0 .35rem; font-size: 1.08rem; }
+.transferencia-opcao p { margin: 0 0 1rem; color: var(--secundario); font-size: .86rem; line-height: 1.5; }
+.transferencia-opcao > .botao-link { margin-top: auto; }
+.form-transferencia { display: flex; align-items: end; flex-wrap: wrap; gap: .7rem; width: 100%; margin-top: auto; }
+.form-transferencia label { flex-basis: 100%; font-size: .81rem; }
+.form-transferencia input { flex: 1; min-width: 190px; max-width: 100%; padding: .43rem .6rem; font-size: .8rem; }
+.form-transferencia button { white-space: nowrap; }
+.pagina-revisao-dados { max-width: 900px; }
+.pagina-revisao-dados .subtitulo { margin-bottom: 1.6rem; }
+.revisao-dados { margin-top: 1rem; }
+.resumo-transferencia { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; }
+.resumo-transferencia > div { display: flex; flex-direction: column; gap: .15rem; padding: 1.15rem; border-radius: .65rem; background: #edf6ef; }
+.resumo-transferencia strong { color: var(--verde); font-size: 1.7rem; line-height: 1.1; }
+.resumo-transferencia span { color: var(--secundario); font-size: .83rem; }
+.aviso-substituicao { margin-top: 1.3rem; padding: 1rem 1.15rem; border: 1px solid #edcfca; border-left: 4px solid #b25043; border-radius: .6rem; background: #fff7f5; }
+.aviso-substituicao strong { color: #842f28; }
+.aviso-substituicao p { margin: .35rem 0 0; color: #79504b; line-height: 1.5; }
+.acoes-revisao { display: flex; justify-content: flex-end; gap: .65rem; margin-top: 1.45rem; }
+.acoes-revisao .botao-perigo { background: #a3372d; }
+.acoes-revisao .botao-perigo:hover { background: #81261e; }
 
 .conteudo-equipe .cabecalho-pagina { margin-bottom: 1.55rem; }
 .cartao-cadastro { margin-bottom: 1.4rem; }
@@ -224,6 +250,7 @@ button:hover { background: var(--verde-escuro); }
   .hero { grid-template-columns: 1fr; }
   .hero-resumo { display: none; }
   .inicio-grid { grid-template-columns: 1fr; }
+  .transferencia-grid { grid-template-columns: 1fr; }
   .cartao-criar, .cartao-escalas { min-height: 0; }
   .cabecalho-pagina .acoes { justify-content: flex-start !important; }
   .titulo-ajuda { display: none; }
@@ -252,6 +279,12 @@ button:hover { background: var(--verde-escuro); }
   .botao-excluir-escala span { display: none; }
   .confirmacao-exclusao { align-items: stretch; flex-direction: column; }
   .confirmacao-exclusao-acoes { justify-content: flex-end; }
+  .cartao-transferencia .titulo-linha { align-items: flex-start; }
+  .transferencia-opcao { padding: 1rem; }
+  .form-transferencia input, .form-transferencia button { width: 100%; }
+  .resumo-transferencia { grid-template-columns: 1fr; }
+  .acoes-revisao { flex-direction: column; }
+  .acoes-revisao form, .acoes-revisao button { width: 100%; }
   .ferramentas > .form-linha:not(.preenchimento-lote), .ferramentas .preenchimento-lote { grid-template-columns: 1fr; }
   .ferramentas .preenchimento-lote button { grid-column: auto; }
   .ferramentas .form-linha button { width: 100%; }
